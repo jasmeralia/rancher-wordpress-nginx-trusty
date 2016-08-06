@@ -2,6 +2,11 @@
 if [ ! -f /usr/share/nginx/www/wp-content/wp-config.php ]; then
   cp /usr/share/nginx/www/wp-content/wp-config.php /usr/share/nginx/www/wp-config.php
   chown www-data:www-data /usr/share/nginx/www/wp-config.php
+
+  # Download nginx helper plugin
+  curl -O `curl -i -s https://wordpress.org/plugins/nginx-helper/ | egrep -o "https://downloads.wordpress.org/plugin/[^']+"`
+  unzip -o nginx-helper.*.zip -d /usr/share/nginx/www/wp-content/plugins
+  chown -R www-data:www-data /usr/share/nginx/www/wp-content/plugins/nginx-helper
 fi
 
 if [ ! -f /usr/share/nginx/www/wp-config.php ]; then
