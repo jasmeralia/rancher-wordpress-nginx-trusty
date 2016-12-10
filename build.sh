@@ -1,13 +1,13 @@
 #!/bin/bash
 DATE=$(date +%Y%m%d.%H%M)
 echo "Building docker-wordpress-nginx:trusty.$DATE"
-docker build -t="stormerider/docker-wordpress-nginx:trusty.$DATE" .
+docker build --no-cache -t="stormerider/docker-wordpress-nginx:trusty.$DATE" .
 echo ""
 echo "Building docker-wordpress-nginx:latest"
 docker build -t="stormerider/docker-wordpress-nginx:latest" .
 echo ""
 echo "Building docker-wordpress-nginx:xenial.$DATE"
-docker build -t="stormerider/docker-wordpress-nginx:xenial.$DATE" . -f Dockerfile-xenial
+docker build --no-cache -t="stormerider/docker-wordpress-nginx:xenial.$DATE" . -f Dockerfile-xenial
 echo ""
 echo "Building docker-wordpress-nginx:xenial"
 docker build -t="stormerider/docker-wordpress-nginx:xenial" . -f Dockerfile-xenial

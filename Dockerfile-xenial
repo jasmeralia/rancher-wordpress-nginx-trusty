@@ -8,8 +8,7 @@ RUN ln -sf /bin/true /sbin/initctl
 # Let the conatiner know that there is no tty
 ENV DEBIAN_FRONTEND noninteractive
 
-# see https://github.com/docker/docker/issues/1326 for why apt-get update has a cache comment
-RUN apt-get update # 20161204 cache
+RUN apt-get update
 RUN apt-get -y upgrade
 
 # Basic Requirements
