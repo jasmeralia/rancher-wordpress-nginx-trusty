@@ -59,6 +59,13 @@ if [ ! -d /usr/share/nginx/www/wp-content/plugins/nginx-helper ]; then
   chown -R www-data:www-data /usr/share/nginx/www/wp-content/plugins/nginx-helper
 fi
 
+# Download WordFence plugin
+if [ ! -d /usr/share/nginx/www/wp-content/plugins/wordfence ]; then
+  curl -O `curl -i -s https://wordpress.org/plugins/wordfence/ | egrep -o "https://downloads.wordpress.org/plugin/[^']+"`
+  unzip -o wordfence.*.zip -d /usr/share/nginx/www/wp-content/plugins
+  chown -R www-data:www-data /usr/share/nginx/www/wp-content/plugins/wordfence
+fi
+
 if [ "$WORDPRESS_MU_ENABLED" == "true" ]; then
   cat << ENDL >> /usr/share/nginx/www/wp-config.php
 
@@ -73,7 +80,7 @@ cat << ENDL >> /usr/share/nginx/www/wp-config.php
 \$plugins = get_option( 'active_plugins' );
 if ( count( \$plugins ) === 0 ) {
   require_once(ABSPATH .'/wp-admin/includes/plugin.php');
-  \$pluginsToActivate = array( 'nginx-helper/nginx-helper.php' );
+  \$pluginsToActivate = array( 'nginx-helper/nginx-helper.php', 'wordfence/wordfence.php' );
   foreach ( \$pluginsToActivate as \$plugin ) {
     if ( !in_array( \$plugin, \$plugins ) ) {
       activate_plugin( '/usr/share/nginx/www/wp-content/plugins/' . \$plugin );
