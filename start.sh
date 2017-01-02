@@ -66,6 +66,20 @@ if [ ! -d /usr/share/nginx/www/wp-content/plugins/wordfence ]; then
   chown -R www-data:www-data /usr/share/nginx/www/wp-content/plugins/wordfence
 fi
 
+# Download JetPack plugin
+if [ ! -d /usr/share/nginx/www/wp-content/plugins/jetpack ]; then
+  curl -O `curl -i -s https://wordpress.org/plugins/jetpack/ | egrep -o "https://downloads.wordpress.org/plugin/[^']+"`
+  unzip -o jetpack.*.zip -d /usr/share/nginx/www/wp-content/plugins
+  chown -R www-data:www-data /usr/share/nginx/www/wp-content/plugins/jetpack
+fi
+
+# Download Akismet plugin
+if [ ! -d /usr/share/nginx/www/wp-content/plugins/akismet ]; then
+  curl -O `curl -i -s https://wordpress.org/plugins/akismet/ | egrep -o "https://downloads.wordpress.org/plugin/[^']+"`
+  unzip -o akismet.*.zip -d /usr/share/nginx/www/wp-content/plugins
+  chown -R www-data:www-data /usr/share/nginx/www/wp-content/plugins/akismet
+fi
+
 if [ "$WORDPRESS_MU_ENABLED" == "true" ]; then
   cat << ENDL >> /usr/share/nginx/www/wp-config.php
 
@@ -80,7 +94,7 @@ cat << ENDL >> /usr/share/nginx/www/wp-config.php
 \$plugins = get_option( 'active_plugins' );
 if ( count( \$plugins ) === 0 ) {
   require_once(ABSPATH .'/wp-admin/includes/plugin.php');
-  \$pluginsToActivate = array( 'nginx-helper/nginx-helper.php', 'wordfence/wordfence.php' );
+  \$pluginsToActivate = array( 'nginx-helper/nginx-helper.php', 'wordfence/wordfence.php', 'jetpack/jetpack.php', 'akismet/akismet.php' );
   foreach ( \$pluginsToActivate as \$plugin ) {
     if ( !in_array( \$plugin, \$plugins ) ) {
       activate_plugin( '/usr/share/nginx/www/wp-content/plugins/' . \$plugin );
