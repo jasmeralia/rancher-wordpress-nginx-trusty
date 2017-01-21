@@ -28,12 +28,7 @@ RUN find /etc/php5/cli/conf.d/ -name "*.ini" -exec sed -i -re 's/^(\s*)#(.*)/\1;
 ADD ./www.conf /etc/php5/fpm/pool.d/www.conf
 
 # nginx site conf
-RUN mkdir /etc/nginx/ssl
-RUN chmod 0700 /etc/nginx/ssl
-RUN chown www-data:www-data /etc/nginx/ssl
 ADD ./nginx-site.conf /etc/nginx/sites-available/default
-ADD ./cert.pem /etc/nginx/ssl/cert.pem
-ADD ./cert.key /etc/nginx/ssl/cert.key
 
 # Supervisor Config
 RUN /usr/bin/easy_install supervisor
