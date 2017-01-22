@@ -80,6 +80,20 @@ if [ ! -d /usr/share/nginx/www/wp-content/plugins/akismet ]; then
   chown -R www-data:www-data /usr/share/nginx/www/wp-content/plugins/akismet
 fi
 
+# Download WP-DBManager plugin
+if [ ! -d /usr/share/nginx/www/wp-content/plugins/wp-dbmanager ]; then
+  curl -O `curl -i -s https://wordpress.org/plugins/wp-dbmanager/ | egrep -o "https://downloads.wordpress.org/plugin/[^']+"`
+  unzip -o wp-dbmanager.*.zip -d /usr/share/nginx/www/wp-content/plugins
+  chown -R www-data:www-data /usr/share/nginx/www/wp-content/plugins/wp-dbmanager
+fi
+
+# Download NextGEN Gallery plugin
+if [ ! -d /usr/share/nginx/www/wp-content/plugins/nextgen-gallery ]; then
+  curl -O `curl -i -s https://wordpress.org/plugins/nextgen-gallery/ | egrep -o "https://downloads.wordpress.org/plugin/[^']+"`
+  unzip -o nextgen-gallery.*.zip -d /usr/share/nginx/www/wp-content/plugins
+  chown -R www-data:www-data /usr/share/nginx/www/wp-content/plugins/nextgen-gallery
+fi
+
 if [ "$WORDPRESS_MU_ENABLED" == "true" ]; then
   cat << ENDL >> /usr/share/nginx/www/wp-config.php
 
@@ -94,7 +108,12 @@ cat << ENDL >> /usr/share/nginx/www/wp-config.php
 \$plugins = get_option( 'active_plugins' );
 if ( count( \$plugins ) === 0 ) {
   require_once(ABSPATH .'/wp-admin/includes/plugin.php');
-  \$pluginsToActivate = array( 'nginx-helper/nginx-helper.php', 'wordfence/wordfence.php', 'jetpack/jetpack.php', 'akismet/akismet.php' );
+  \$pluginsToActivate = array( 'nginx-helper/nginx-helper.php',
+                               'wordfence/wordfence.php',
+                               'jetpack/jetpack.php',
+                               'wp-dbmanager/wp-dbmanager.php',
+                               'nextgen-gallery/nggallery.php',
+                               'akismet/akismet.php' );
   foreach ( \$pluginsToActivate as \$plugin ) {
     if ( !in_array( \$plugin, \$plugins ) ) {
       activate_plugin( '/usr/share/nginx/www/wp-content/plugins/' . \$plugin );
