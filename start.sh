@@ -1,5 +1,47 @@
 #!/bin/bash
 
+download_plugin() {
+  # Download nginx helper plugin
+  curl -O `curl -i -s https://wordpress.org/plugins/$1/ | egrep -o "https://downloads.wordpress.org/plugin/[^']+"`
+  if [ $? -eq 0 ]; then
+    new_fname=`ls $1.*.zip`
+    new_sha=`sha256sum $new_fname| awk '{print $1}'`
+    old_fname=`ls /usr/share/nginx/www/wp-content/plugin-downloads/$1.*.zip`
+    if [ ! -e $old_fname ]; then
+      cp $old_fname /usr/share/nginx/www/wp-content/plugin-downloads/
+      $old_sha="x"
+    else
+      old_sha=`sha256sum $old_fname| awk '{print $1}'`
+    fi
+    if [ "$old_sha" == "$new_sha" ]; then
+      echo "Old version of $1 is already installed (plugin zip files match)"
+      #rm -f $new_fname
+    else
+      rm -rf /usr/share/nginx/www/wp-content/plugins-new/$1
+      unzip -o $new_fname -d /usr/share/nginx/www/wp-content/plugins-new
+      if [ $? -eq 0 ]; then
+        diff -r /usr/share/nginx/www/wp-content/plugins-new/$1 /usr/share/nginx/www/wp-content/plugins/$1
+        if [ $? -eq 0 ]; then
+          # No difference in unzipped files
+          echo "Old version of $1 is already installed (unzipped directories match)"
+          #rm -f $new_fname
+        else
+          rm -f $old_fname
+          mv $new_fname /usr/share/nginx/www/wp-content/plugin-downloads/
+          rm -rf /usr/share/nginx/www/wp-content/plugins/$1
+          mv /usr/share/nginx/www/wp-content/plugins-new/$1 /usr/share/nginx/www/wp-content/plugins/$1
+        fi
+      else
+        rm -f $new_fname
+        rm -rf /usr/share/nginx/www/wp-content/plugins/$1
+        rm -rf /usr/share/nginx/www/wp-content/plugins-new/$1
+        unzip -o $old_fname -d /usr/share/nginx/www/wp-content/plugins
+      fi
+    fi
+  fi
+  chown -R www-data:www-data /usr/share/nginx/www/wp-content/plugins/$1
+}
+
 # Set sane defaults if not passed via environment variables
 if [ "x$WORDPRESS_DB_PRFX" == "x" ]; then
   WORDPRESS_DB_PRFX="wp_"
@@ -52,48 +94,18 @@ sed -e "s/database_name_here/$WORDPRESS_DB_NAME/
   /'LOGGED_IN_SALT'/s/put your unique phrase here/$WORDPRESS_LOGGED_IN_SALT/
   /'NONCE_SALT'/s/put your unique phrase here/$WORDPRESS_NONCE_SALT/" /usr/share/nginx/www/wp-config-sample.php > /usr/share/nginx/www/wp-config.php
 
-# Download nginx helper plugin
-if [ ! -d /usr/share/nginx/www/wp-content/plugins/nginx-helper ]; then
-  curl -O `curl -i -s https://wordpress.org/plugins/nginx-helper/ | egrep -o "https://downloads.wordpress.org/plugin/[^']+"`
-  unzip -o nginx-helper.*.zip -d /usr/share/nginx/www/wp-content/plugins
-  chown -R www-data:www-data /usr/share/nginx/www/wp-content/plugins/nginx-helper
-fi
+mkdir /usr/share/nginx/www/wp-content/plugins-new
+mkdir /usr/share/nginx/www/wp-content/plugin-downloads
 
-# Download WordFence plugin
-if [ ! -d /usr/share/nginx/www/wp-content/plugins/wordfence ]; then
-  curl -O `curl -i -s https://wordpress.org/plugins/wordfence/ | egrep -o "https://downloads.wordpress.org/plugin/[^']+"`
-  unzip -o wordfence.*.zip -d /usr/share/nginx/www/wp-content/plugins
-  chown -R www-data:www-data /usr/share/nginx/www/wp-content/plugins/wordfence
-fi
+# Download plugins
+download_plugin nginx-helper
+download_plugin wordfence
+download_plugin jetpack
+download_plugin akismet
+download_plugin wp-dbmanager
+download_plugin nextgen-gallery
 
-# Download JetPack plugin
-if [ ! -d /usr/share/nginx/www/wp-content/plugins/jetpack ]; then
-  curl -O `curl -i -s https://wordpress.org/plugins/jetpack/ | egrep -o "https://downloads.wordpress.org/plugin/[^']+"`
-  unzip -o jetpack.*.zip -d /usr/share/nginx/www/wp-content/plugins
-  chown -R www-data:www-data /usr/share/nginx/www/wp-content/plugins/jetpack
-fi
-
-# Download Akismet plugin
-if [ ! -d /usr/share/nginx/www/wp-content/plugins/akismet ]; then
-  curl -O `curl -i -s https://wordpress.org/plugins/akismet/ | egrep -o "https://downloads.wordpress.org/plugin/[^']+"`
-  unzip -o akismet.*.zip -d /usr/share/nginx/www/wp-content/plugins
-  chown -R www-data:www-data /usr/share/nginx/www/wp-content/plugins/akismet
-fi
-
-# Download WP-DBManager plugin
-if [ ! -d /usr/share/nginx/www/wp-content/plugins/wp-dbmanager ]; then
-  curl -O `curl -i -s https://wordpress.org/plugins/wp-dbmanager/ | egrep -o "https://downloads.wordpress.org/plugin/[^']+"`
-  unzip -o wp-dbmanager.*.zip -d /usr/share/nginx/www/wp-content/plugins
-  chown -R www-data:www-data /usr/share/nginx/www/wp-content/plugins/wp-dbmanager
-fi
-
-# Download NextGEN Gallery plugin
-if [ ! -d /usr/share/nginx/www/wp-content/plugins/nextgen-gallery ]; then
-  curl -O `curl -i -s https://wordpress.org/plugins/nextgen-gallery/ | egrep -o "https://downloads.wordpress.org/plugin/[^']+"`
-  unzip -o nextgen-gallery.*.zip -d /usr/share/nginx/www/wp-content/plugins
-  chown -R www-data:www-data /usr/share/nginx/www/wp-content/plugins/nextgen-gallery
-fi
-
+# Support migrating over to WPMU
 if [ "$WORDPRESS_MU_ENABLED" == "true" ]; then
   cat << ENDL >> /usr/share/nginx/www/wp-config.php
 
@@ -103,7 +115,7 @@ if [ "$WORDPRESS_MU_ENABLED" == "true" ]; then
 ENDL
 fi
 
-# Activate nginx plugin once logged in
+# Activate plugins once logged in
 cat << ENDL >> /usr/share/nginx/www/wp-config.php
 \$plugins = get_option( 'active_plugins' );
 if ( count( \$plugins ) === 0 ) {
@@ -111,8 +123,6 @@ if ( count( \$plugins ) === 0 ) {
   \$pluginsToActivate = array( 'nginx-helper/nginx-helper.php',
                                'wordfence/wordfence.php',
                                'jetpack/jetpack.php',
-                               'wp-dbmanager/wp-dbmanager.php',
-                               'nextgen-gallery/nggallery.php',
                                'akismet/akismet.php' );
   foreach ( \$pluginsToActivate as \$plugin ) {
     if ( !in_array( \$plugin, \$plugins ) ) {
