@@ -7,9 +7,10 @@ download_plugin() {
     new_fname=`ls $1.*.zip`
     new_sha=`sha256sum $new_fname| awk '{print $1}'`
     old_fname=`ls /usr/share/nginx/www/wp-content/plugin-downloads/$1.*.zip`
-    if [ ! -e $old_fname ]; then
-      cp $old_fname /usr/share/nginx/www/wp-content/plugin-downloads/
-      $old_sha="x"
+    if [ $? -ne 0 ]; then
+      cp $new_fname /usr/share/nginx/www/wp-content/plugin-downloads/
+      old_fname="/usr/share/nginx/www/wp-content/plugin-downloads/$new_fname"
+      old_sha="x"
     else
       old_sha=`sha256sum $old_fname| awk '{print $1}'`
     fi
