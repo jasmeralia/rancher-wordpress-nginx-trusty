@@ -66,7 +66,7 @@ do
   /wpdl.sh plugin $plugin &
 done
 
-# Download plugins
+# Download themes
 mkdir /usr/share/nginx/www/wp-content/themes-new
 mkdir /usr/share/nginx/www/wp-content/theme-downloads
 if [ "x$WORDPRESS_THEMES" == "x" ]; then
