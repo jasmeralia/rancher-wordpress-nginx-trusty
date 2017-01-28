@@ -181,6 +181,7 @@ fi
 
 # Activate plugins once logged in
 cat << ENDL >> /usr/share/nginx/www/wp-config.php
+define( 'WP_AUTO_UPDATE_CORE', false );
 \$plugins = get_option( 'active_plugins' );
 if ( count( \$plugins ) === 0 ) {
   require_once(ABSPATH .'/wp-admin/includes/plugin.php');
