@@ -1,7 +1,8 @@
 #!/bin/bash
 
 download_plugin() {
-  # Download nginx helper plugin
+  # Download plugins
+  echo "Downloading plugin $1..."
   curl -O `curl -i -s https://wordpress.org/plugins/$1/ | egrep -o "https://downloads.wordpress.org/plugin/[^']+"`
   if [ $? -eq 0 ]; then
     new_fname=`ls $1.*.zip`
@@ -24,7 +25,7 @@ download_plugin() {
         diff -r /usr/share/nginx/www/wp-content/plugins-new/$1 /usr/share/nginx/www/wp-content/plugins/$1
         if [ $? -eq 0 ]; then
           # No difference in unzipped files
-          echo "Old version of $1 is already installed (unzipped directories match)"
+          echo "Old version of $1 is already installed (unzipped plugin directories match)"
           #rm -f $new_fname
         else
           rm -f $old_fname
@@ -42,6 +43,51 @@ download_plugin() {
   fi
   chown -R www-data:www-data /usr/share/nginx/www/wp-content/plugins/$1
 }
+
+download_theme() {
+  # Download theme
+  echo "Downloading theme $1..."
+  curl -O `curl -i -s https://wordpress.org/themes/$1/ | egrep -o "https://downloads.wordpress.org/theme/$1[^']+.zip"`
+  if [ $? -eq 0 ]; then
+    new_fname=`ls $1.*.zip`
+    new_sha=`sha256sum $new_fname| awk '{print $1}'`
+    old_fname=`ls /usr/share/nginx/www/wp-content/theme-downloads/$1.*.zip`
+    if [ $? -ne 0 ]; then
+      cp $new_fname /usr/share/nginx/www/wp-content/theme-downloads/
+      old_fname="/usr/share/nginx/www/wp-content/theme-downloads/$new_fname"
+      old_sha="x"
+    else
+      old_sha=`sha256sum $old_fname| awk '{print $1}'`
+    fi
+    if [ "$old_sha" == "$new_sha" ]; then
+      echo "Old version of $1 is already installed (theme zip files match)"
+      #rm -f $new_fname
+    else
+      rm -rf /usr/share/nginx/www/wp-content/themes-new/$1
+      unzip -o $new_fname -d /usr/share/nginx/www/wp-content/themes-new
+      if [ $? -eq 0 ]; then
+        diff -r /usr/share/nginx/www/wp-content/themes-new/$1 /usr/share/nginx/www/wp-content/themes/$1
+        if [ $? -eq 0 ]; then
+          # No difference in unzipped files
+          echo "Old version of $1 is already installed (unzipped theme directories match)"
+          #rm -f $new_fname
+        else
+          rm -f $old_fname
+          mv $new_fname /usr/share/nginx/www/wp-content/theme-downloads/
+          rm -rf /usr/share/nginx/www/wp-content/themes/$1
+          mv /usr/share/nginx/www/wp-content/themes-new/$1 /usr/share/nginx/www/wp-content/themes/$1
+        fi
+      else
+        rm -f $new_fname
+        rm -rf /usr/share/nginx/www/wp-content/themes/$1
+        rm -rf /usr/share/nginx/www/wp-content/themes-new/$1
+        unzip -o $old_fname -d /usr/share/nginx/www/wp-content/themes
+      fi
+    fi
+  fi
+  chown -R www-data:www-data /usr/share/nginx/www/wp-content/themes/$1
+}
+
 
 # Set sane defaults if not passed via environment variables
 if [ "x$WORDPRESS_DB_PRFX" == "x" ]; then
@@ -95,16 +141,33 @@ sed -e "s/database_name_here/$WORDPRESS_DB_NAME/
   /'LOGGED_IN_SALT'/s/put your unique phrase here/$WORDPRESS_LOGGED_IN_SALT/
   /'NONCE_SALT'/s/put your unique phrase here/$WORDPRESS_NONCE_SALT/" /usr/share/nginx/www/wp-config-sample.php > /usr/share/nginx/www/wp-config.php
 
+# Download plugins
 mkdir /usr/share/nginx/www/wp-content/plugins-new
 mkdir /usr/share/nginx/www/wp-content/plugin-downloads
+if [ "x$WORDPRESS_PLUGINS" == "x" ]; then
+  plugins=(nginx-helper wordfence jetpack akismet wp-dbmanager nextgen-gallery)
+else
+  IFS=',' read -r -a plugins <<< "$WORDPRESS_PLUGINS"
+fi
+
+for plugin in "${plugins[@]}"
+do
+  download_plugin $plugin
+done
 
 # Download plugins
-download_plugin nginx-helper
-download_plugin wordfence
-download_plugin jetpack
-download_plugin akismet
-download_plugin wp-dbmanager
-download_plugin nextgen-gallery
+mkdir /usr/share/nginx/www/wp-content/themes-new
+mkdir /usr/share/nginx/www/wp-content/theme-downloads
+if [ "x$WORDPRESS_THEMES" == "x" ]; then
+  themes=(twentyten twentyeleven twentytwelve twentythirteen twentyfourteen twentyfifteen twentysixteen twentyseventeen)
+else
+  IFS=',' read -r -a themes <<< "$WORDPRESS_THEMES"
+fi
+
+for theme in "${themes[@]}"
+do
+  download_theme $theme
+done
 
 # Support migrating over to WPMU
 if [ "$WORDPRESS_MU_ENABLED" == "true" ]; then
