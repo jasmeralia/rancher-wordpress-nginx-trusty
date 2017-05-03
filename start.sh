@@ -78,7 +78,7 @@ done
 
 /usr/local/bin/wp plugin update --all --allow-root --path='/usr/share/nginx/www'
 /usr/local/bin/wp theme update --all --allow-root --path='/usr/share/nginx/www'
-chown -R www-data:www-data /usr/share/nginx/www
+chown -R www-data:www-data /usr/share/nginx/www/wp-content
 
 # Support migrating over to WPMU
 if [ "$WORDPRESS_MU_ENABLED" == "true" ]; then
