@@ -35,6 +35,9 @@ RUN /usr/bin/easy_install supervisor
 RUN /usr/bin/easy_install supervisor-stdout
 ADD ./supervisord.conf /etc/supervisord.conf
 
+# Enable shell access for www-data user
+RUN /usr/bin/chsh -s /bin/bash www-data
+
 # Install Wordpress
 ADD https://wordpress.org/latest.tar.gz /usr/share/nginx/latest.tar.gz
 RUN cd /usr/share/nginx/ && tar xvf latest.tar.gz && rm latest.tar.gz
