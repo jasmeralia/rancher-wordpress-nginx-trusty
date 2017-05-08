@@ -4,7 +4,7 @@ download_plugin() {
   old_fdir="/usr/share/nginx/www/wp-content/plugins/$1"
   if [ ! -e $old_fdir ]; then
     # Download plugin
-    /usr/local/bin/wp plugin install $1 --activate --allow-root --path='/usr/share/nginx/www'
+    su -c "/usr/local/bin/wp plugin install $1 --activate --path='/usr/share/nginx/www'" www-data
   fi
 }
 
@@ -12,7 +12,7 @@ download_theme() {
   old_fdir="/usr/share/nginx/www/wp-content/themes/$1"
   if [ ! -e $old_fdir ]; then
     # Download plugin
-    /usr/local/bin/wp theme install $1 --activate --allow-root --path='/usr/share/nginx/www'
+    su -c "/usr/local/bin/wp theme install $1 --activate --path='/usr/share/nginx/www'" www-data
   fi
 }
 

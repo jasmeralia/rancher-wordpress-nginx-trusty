@@ -76,9 +76,8 @@ do
   /wpdl.sh theme $theme
 done
 
-/usr/local/bin/wp plugin update --all --allow-root --path='/usr/share/nginx/www'
-/usr/local/bin/wp theme update --all --allow-root --path='/usr/share/nginx/www'
-chown -R www-data:www-data /usr/share/nginx/www/wp-content
+su -c "/usr/local/bin/wp plugin update --all --path='/usr/share/nginx/www'" www-data
+su -c "/usr/local/bin/wp theme update --all --path='/usr/share/nginx/www'" www-data
 
 # Support migrating over to WPMU
 if [ "$WORDPRESS_MU_ENABLED" == "true" ]; then
@@ -90,7 +89,7 @@ if [ "$WORDPRESS_MU_ENABLED" == "true" ]; then
 ENDL
 fi
 
-# Activate plugins once logged in
+# Disable automatic updates
 cat << ENDL >> /usr/share/nginx/www/wp-config.php
 define( 'WP_AUTO_UPDATE_CORE', false );
 ENDL
