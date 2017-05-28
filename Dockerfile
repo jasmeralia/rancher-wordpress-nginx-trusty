@@ -1,6 +1,14 @@
 FROM ubuntu:14.04
 MAINTAINER Morgan Blackthorne <morgan@windsofstorm.net>
 
+ARG BUILD_DATE
+ARG VCS_REF
+
+LABEL org.label-schema.build-date=$BUILD_DATE \
+      org.label-schema.vcs-url="https://github.com/stormerider/rancher-wordpress-nginx-trusty.git" \
+      org.label-schema.vcs-ref=$VCS_REF \
+      org.label-schema.schema-version="1.0.3.9"
+
 # Keep upstart from complaining
 RUN dpkg-divert --local --rename --add /sbin/initctl
 RUN ln -sf /bin/true /sbin/initctl
