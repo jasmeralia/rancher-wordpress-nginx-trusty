@@ -1,7 +1,7 @@
 # docker-wordpress-nginx
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/stormerider/rancher-wordpress-nginx-trusty.svg)][hub]
-[![Docker Stars](https://img.shields.io/docker/stars/stormerider/rancher-wordpress-nginx-trusty.svg)][hub]
+[![Docker Pulls](https://img.shields.io/docker/pulls/stormerider/rancher-wordpress-nginx-trusty.svg)]
+[![Docker Stars](https://img.shields.io/docker/stars/stormerider/rancher-wordpress-nginx-trusty.svg)]
 [![Docker Layers](https://images.microbadger.com/badges/image/stormerider/rancher-wordpress-nginx-trusty.svg)](https://microbadger.com/images/stormerider/rancher-wordpress-nginx-trusty "Get your own image badge on microbadger.com")
 [![Docker Version](https://images.microbadger.com/badges/version/stormerider/rancher-wordpress-nginx-trusty.svg)](https://microbadger.com/images/stormerider/rancher-wordpress-nginx-trusty "Get your own version badge on microbadger.com")
 
