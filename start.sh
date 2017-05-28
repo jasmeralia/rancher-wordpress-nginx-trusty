@@ -89,6 +89,7 @@ if [ "$WORDPRESS_MU_ENABLED" == "true" ]; then
 ENDL
 fi
 
+# Support test site URL overriding
 if [ "x$WORDPRESS_URL" != "x" ]; then
   cat << ENDL >> /usr/share/nginx/www/wp-config.php
 
@@ -96,6 +97,19 @@ if [ "x$WORDPRESS_URL" != "x" ]; then
   define( 'WP_HOME', "$WORDPRESS_URL" );
   define( 'WP_SITEURL', "$WORDPRESS_URL" );
 
+ENDL
+fi
+
+# Enable debug logging upon request via env variable
+if [ "x$WORDPRESS_DEBUG" != "x" ]; then
+  cat << ENDL >> /usr/share/nginx/www/wp-config.php
+  // Debug settings
+  define('WP_DEBUG', true);
+  define('WP_DEBUG_LOG', true);
+  define('WP_DEBUG_DISPLAY', false);
+  define('SCRIPT_DEBUG', false);
+  define('SAVEQUERIES', false);
+  @ini_set('display_errors', 0);
 ENDL
 fi
 
