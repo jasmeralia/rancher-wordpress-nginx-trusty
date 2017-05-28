@@ -89,9 +89,19 @@ if [ "$WORDPRESS_MU_ENABLED" == "true" ]; then
 ENDL
 fi
 
+if [ "x$WORDPRESS_URL" != "x" ]; then
+  cat << ENDL >> /usr/share/nginx/www/wp-config.php
+
+  /* Hardcode site URLs */
+  define( 'WP_HOME', "$WORDPRESS_URL" );
+  define( 'WP_SITEURL', "$WORDPRESS_URL" );
+
+ENDL
+fi
+
 # Disable automatic updates
 cat << ENDL >> /usr/share/nginx/www/wp-config.php
-define( 'WP_AUTO_UPDATE_CORE', false );
+  define( 'WP_AUTO_UPDATE_CORE', false );
 ENDL
 
 chown www-data:www-data /usr/share/nginx/www/wp-config.php
