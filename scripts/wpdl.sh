@@ -16,14 +16,21 @@ download_theme() {
   fi
 }
 
-if [ "x$1" == "x" || "x$2" == "x" ]; then
+# Ensure requisite parameters are set
+if [ "x$1" == "x" ]; then
   echo "Usage: $0 <theme|plugin> <name>"
   exit 1
 fi
 
-if [ $1 == "theme" ]; then
+if [ "x$2" == "x" ]; then
+  echo "Usage: $0 <theme|plugin> <name>"
+  exit 1
+fi
+
+# do the work
+if [ "$1" == "theme" ]; then
   download_theme $2
-elif [ $1 == "plugin" ]; then
+elif [ "$1" == "plugin" ]; then
   download_plugin $2
 else
   echo "Usage: $0 <theme|plugin> <name>"
