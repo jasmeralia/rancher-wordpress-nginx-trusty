@@ -1,6 +1,14 @@
 FROM ubuntu:14.04
 MAINTAINER Morgan Blackthorne <morgan@windsofstorm.net>
 
+ARG BUILD_DATE
+ARG VCS_REF
+
+LABEL org.label-schema.build-date=$BUILD_DATE \
+      org.label-schema.vcs-url="https://github.com/stormerider/rancher-wordpress-nginx-trusty.git" \
+      org.label-schema.vcs-ref=$VCS_REF \
+      org.label-schema.schema-version="1.0.3.9"
+
 # Keep upstart from complaining
 RUN dpkg-divert --local --rename --add /sbin/initctl
 RUN ln -sf /bin/true /sbin/initctl
@@ -35,6 +43,9 @@ RUN /usr/bin/easy_install supervisor
 RUN /usr/bin/easy_install supervisor-stdout
 ADD ./supervisord.conf /etc/supervisord.conf
 
+# Enable shell access for www-data user
+RUN /usr/bin/chsh -s /bin/bash www-data
+
 # Install Wordpress
 ADD https://wordpress.org/latest.tar.gz /usr/share/nginx/latest.tar.gz
 RUN cd /usr/share/nginx/ && tar xvf latest.tar.gz && rm latest.tar.gz
@@ -42,6 +53,11 @@ RUN mv /usr/share/nginx/html/5* /usr/share/nginx/wordpress
 RUN rm -rf /usr/share/nginx/www
 RUN mv /usr/share/nginx/wordpress /usr/share/nginx/www
 RUN chown -R www-data:www-data /usr/share/nginx/www
+
+# Install WP CLI
+RUN curl https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o /usr/local/bin/wp
+RUN chmod +x /usr/local/bin/wp
+RUN ln -s /usr/share/nginx/www /var/www
 
 # Wordpress Initialization and Startup Script
 ADD ./start.sh /start.sh

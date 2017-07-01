@@ -53,8 +53,6 @@ sed -e "s/database_name_here/$WORDPRESS_DB_NAME/
   /'NONCE_SALT'/s/put your unique phrase here/$WORDPRESS_NONCE_SALT/" /usr/share/nginx/www/wp-config-sample.php > /usr/share/nginx/www/wp-config.php
 
 # Download plugins
-mkdir /usr/share/nginx/www/wp-content/plugins-new
-mkdir /usr/share/nginx/www/wp-content/plugin-downloads
 if [ "x$WORDPRESS_PLUGINS" == "x" ]; then
   plugins=(nginx-helper wordfence jetpack akismet wp-dbmanager nextgen-gallery)
 else
@@ -63,12 +61,10 @@ fi
 
 for plugin in "${plugins[@]}"
 do
-  /wpdl.sh plugin $plugin &
+  /wpdl.sh plugin $plugin
 done
 
 # Download themes
-mkdir /usr/share/nginx/www/wp-content/themes-new
-mkdir /usr/share/nginx/www/wp-content/theme-downloads
 if [ "x$WORDPRESS_THEMES" == "x" ]; then
   themes=(twentyten twentyeleven twentytwelve twentythirteen twentyfourteen twentyfifteen twentysixteen twentyseventeen)
 else
@@ -77,8 +73,11 @@ fi
 
 for theme in "${themes[@]}"
 do
-  /wpdl.sh theme $theme &
+  /wpdl.sh theme $theme
 done
+
+su -c "/usr/local/bin/wp plugin update --all --path='/usr/share/nginx/www'" www-data
+su -c "/usr/local/bin/wp theme update --all --path='/usr/share/nginx/www'" www-data
 
 # Support migrating over to WPMU
 if [ "$WORDPRESS_MU_ENABLED" == "true" ]; then
@@ -90,22 +89,33 @@ if [ "$WORDPRESS_MU_ENABLED" == "true" ]; then
 ENDL
 fi
 
-# Activate plugins once logged in
+# Support test site URL overriding
+if [ "x$WORDPRESS_URL" != "x" ]; then
+  cat << ENDL >> /usr/share/nginx/www/wp-config.php
+
+  /* Hardcode site URLs */
+  define( 'WP_HOME', "$WORDPRESS_URL" );
+  define( 'WP_SITEURL', "$WORDPRESS_URL" );
+
+ENDL
+fi
+
+# Enable debug logging upon request via env variable
+if [ "x$WORDPRESS_DEBUG" != "x" ]; then
+  cat << ENDL >> /usr/share/nginx/www/wp-config.php
+  // Debug settings
+  define('WP_DEBUG', true);
+  define('WP_DEBUG_LOG', true);
+  define('WP_DEBUG_DISPLAY', false);
+  define('SCRIPT_DEBUG', false);
+  define('SAVEQUERIES', false);
+  @ini_set('display_errors', 0);
+ENDL
+fi
+
+# Disable automatic updates
 cat << ENDL >> /usr/share/nginx/www/wp-config.php
-define( 'WP_AUTO_UPDATE_CORE', false );
-\$plugins = get_option( 'active_plugins' );
-if ( count( \$plugins ) === 0 ) {
-  require_once(ABSPATH .'/wp-admin/includes/plugin.php');
-  \$pluginsToActivate = array( 'nginx-helper/nginx-helper.php',
-                               'wordfence/wordfence.php',
-                               'jetpack/jetpack.php',
-                               'akismet/akismet.php' );
-  foreach ( \$pluginsToActivate as \$plugin ) {
-    if ( !in_array( \$plugin, \$plugins ) ) {
-      activate_plugin( '/usr/share/nginx/www/wp-content/plugins/' . \$plugin );
-    }
-  }
-}
+  define( 'WP_AUTO_UPDATE_CORE', false );
 ENDL
 
 chown www-data:www-data /usr/share/nginx/www/wp-config.php
