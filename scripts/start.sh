@@ -6,6 +6,7 @@ if [ -e '/newrelic.license' ] && [ -s '/newrelic.license' ]; then
   if [ "x$NEWRELIC_APPNAME" != "x" ]; then
     echo "newrelic.appname=\"$NEWRELIC_APPNAME\"" >> /etc/php5/fpm/conf.d/20-newrelic.ini
   fi
+  echo "newrelic.error_collector.enabled = true" >> /etc/php5/fpm/conf.d/20-newrelic.ini
 fi
 
 # Set sane defaults if not passed via environment variables
