@@ -7,7 +7,7 @@ ARG VCS_REF
 LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.vcs-url="https://github.com/stormerider/rancher-wpmu-nginx-trusty.git" \
       org.label-schema.vcs-ref=$VCS_REF \
-      org.label-schema.schema-version="1.0.4.6"
+      org.label-schema.schema-version="1.0.4.7"
 
 # Keep upstart from complaining
 RUN dpkg-divert --local --rename --add /sbin/initctl
@@ -21,10 +21,6 @@ ADD https://download.newrelic.com/548C16BF.gpg /newrelic.gpg
 RUN apt-key add /newrelic.gpg
 RUN echo "deb http://apt.newrelic.com/debian/ newrelic non-free" > /etc/apt/sources.list.d/newrelic.list
 
-# Configure nginx repo for more updated packages
-RUN printf "deb http://nginx.org/packages/ubuntu/ trusty nginx\ndeb-src http://nginx.org/packages/ubuntu/ trusty nginx" >> /etc/apt/sources.list.d/nginx.list
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys ABF5BD827BD9BF62
-
 # Update and upgrade
 RUN apt-get update
 RUN apt-get -y upgrade
@@ -33,6 +29,11 @@ RUN apt-get -y upgrade
 RUN apt-get -y install mysql-client nginx php5-fpm php5-mysql php-apc pwgen python-setuptools curl unzip php5-curl php5-gd php5-intl php-pear php5-imagick php5-imap php5-mcrypt php5-memcache php5-ming php5-ps php5-pspell php5-recode php5-sqlite php5-tidy php5-xmlrpc php5-xsl bzip2 xz-utils zip newrelic-php5
 
 # nginx config
+RUN sed -i -e"s/keepalive_timeout\s*65/keepalive_timeout 2/" /etc/nginx/nginx.conf
+RUN sed -i -e"s/keepalive_timeout 2/keepalive_timeout 2;\n\tclient_max_body_size 100m/" /etc/nginx/nginx.conf
+RUN echo "daemon off;" >> /etc/nginx/nginx.conf
+RUN echo "fastcgi_param  SCRIPT_FILENAME    \$document_root\$fastcgi_script_name;" >> /etc/nginx/fastcgi_params
+RUN echo "fastcgi_param  PATH_INFO          \$fastcgi_script_name;" >> /etc/nginx/fastcgi_params
 ADD ./config/nginx-core.conf /etc/nginx/nginx.conf
 
 # php-fpm config
