@@ -5,9 +5,9 @@ ARG BUILD_DATE
 ARG VCS_REF
 
 LABEL org.label-schema.build-date=$BUILD_DATE \
-      org.label-schema.vcs-url="https://github.com/stormerider/rancher-wordpress-nginx-trusty.git" \
+      org.label-schema.vcs-url="https://github.com/stormerider/rancher-wpmu-nginx-trusty.git" \
       org.label-schema.vcs-ref=$VCS_REF \
-      org.label-schema.schema-version="1.0.3.9"
+      org.label-schema.schema-version="1.0.4.2"
 
 # Keep upstart from complaining
 RUN dpkg-divert --local --rename --add /sbin/initctl
@@ -16,11 +16,21 @@ RUN ln -sf /bin/true /sbin/initctl
 # Let the conatiner know that there is no tty
 ENV DEBIAN_FRONTEND noninteractive
 
+# Install NewRelic support
+ADD https://download.newrelic.com/548C16BF.gpg /newrelic.gpg
+RUN apt-key add /newrelic.gpg
+RUN echo "deb http://apt.newrelic.com/debian/ newrelic non-free" > /etc/apt/sources.list.d/newrelic.list
+
+# Configure nginx repo for more updated packages
+RUN printf "deb http://nginx.org/packages/ubuntu/ trusty nginx\ndeb-src http://nginx.org/packages/ubuntu/ trusty nginx" >> /etc/apt/sources.list.d/nginx.list
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys ABF5BD827BD9BF62
+
+# Update and upgrade
 RUN apt-get update
 RUN apt-get -y upgrade
 
 # Basic Requirements
-RUN apt-get -y install mysql-client nginx php5-fpm php5-mysql php-apc python-setuptools wget curl unzip php5-curl php5-gd php5-intl php-pear php5-imagick php5-imap php5-mcrypt php5-memcache php5-ming php5-ps php5-pspell php5-recode php5-sqlite php5-tidy php5-xmlrpc php5-xsl bzip2 xz-utils zip pwgen
+RUN apt-get -y install mysql-client nginx php5-fpm php5-mysql php-apc pwgen python-setuptools curl unzip php5-curl php5-gd php5-intl php-pear php5-imagick php5-imap php5-mcrypt php5-memcache php5-ming php5-ps php5-pspell php5-recode php5-sqlite php5-tidy php5-xmlrpc php5-xsl bzip2 xz-utils zip newrelic-php5
 
 # nginx config
 RUN sed -i -e"s/keepalive_timeout\s*65/keepalive_timeout 2/" /etc/nginx/nginx.conf
@@ -58,12 +68,6 @@ RUN chown -R www-data:www-data /usr/share/nginx/www
 RUN curl https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o /usr/local/bin/wp
 RUN chmod +x /usr/local/bin/wp
 RUN ln -s /usr/share/nginx/www /var/www
-
-# Install NewRelic support
-RUN wget -O - https://download.newrelic.com/548C16BF.gpg | sudo apt-key add -
-RUN echo "deb http://apt.newrelic.com/debian/ newrelic non-free" > /etc/apt/sources.list.d/newrelic.list
-RUN apt-get update
-RUN apt-get install -y newrelic-php5
 
 # Wordpress Initialization and Startup Script
 ADD ./scripts/start.sh /start.sh
