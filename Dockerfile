@@ -46,7 +46,7 @@ RUN find /etc/php5/cli/conf.d/ -name "*.ini" -exec sed -i -re 's/^(\s*)#(.*)/\1;
 ADD ./config/www.conf /etc/php5/fpm/pool.d/www.conf
 
 # nginx site conf
-ADD ./config/nginx-site.conf /etc/nginx/sites-available/default
+ADD ./config/nginx-site.conf /etc/nginx/conf.d/00-default.conf
 
 # Supervisor Config
 RUN /usr/bin/easy_install supervisor
