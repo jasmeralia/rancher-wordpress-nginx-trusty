@@ -9,6 +9,8 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.vcs-ref=$VCS_REF \
       org.label-schema.schema-version="1.0.4.9"
 
+RUN date
+
 # Keep upstart from complaining
 RUN dpkg-divert --local --rename --add /sbin/initctl
 RUN ln -sf /bin/true /sbin/initctl
@@ -56,7 +58,7 @@ RUN /usr/bin/chsh -s /bin/bash www-data
 
 # Install Wordpress
 ADD https://wordpress.org/latest.tar.gz /usr/share/nginx/latest.tar.gz
-RUN cd /usr/share/nginx/ && tar xvf latest.tar.gz && rm latest.tar.gz
+RUN cd /usr/share/nginx/ && tar xf latest.tar.gz && rm latest.tar.gz
 RUN mv /usr/share/nginx/html/5* /usr/share/nginx/wordpress
 RUN rm -rf /usr/share/nginx/www
 RUN mv /usr/share/nginx/wordpress /usr/share/nginx/www
@@ -80,3 +82,5 @@ EXPOSE 80
 VOLUME ["/usr/share/nginx/www/wp-content"]
 
 CMD ["/bin/bash", "/start.sh"]
+
+RUN date
